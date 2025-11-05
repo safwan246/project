@@ -5,16 +5,20 @@ import bcrypt from 'bcrypt'
 //////////////////// main register /////////////////////////////////////
 
 export async function postRegister(req,res){
+  console.log("req came in");
+  
     try{
-        const {username,email,password,repassword} =req.body;
-        console.log(req.body)
+        const {username,email,password,confirmPassword} =req.body;
+        // console.log(req.body)
 
         const find = await User.findOne({email:email})
+        console.log(email);
+        
         if(find){
           return res.json('user already existing')
         }
 
-        if(password !== repassword){
+        if(password !== confirmPassword){
             return res.json('enter same password')
         }
 
@@ -27,6 +31,9 @@ export async function postRegister(req,res){
         password:hashPass
 
       })
+
+      newUser.save()
+
       console.log(newUser);
       return res.json('successful')
       
@@ -47,12 +54,12 @@ export async function postRegister(req,res){
 export async function postLogin(req,res){
   try{
     const {email,password} = req.body
-    console.log(req.body);
+    // console.log(req.body);
 
     const store = await User.findOne({email:email})
 
     if(!store){
-      return res.json('user not found')
+      return res.status(404).json('user not found')
     }
     
     const isCorrect = await bcrypt.compare(password,store.password)
@@ -68,7 +75,7 @@ export async function postLogin(req,res){
 
     }
     if(isCorrect){
-      return res.json('user loggin')
+      return res.json( { message: ' login successful' })
     }
 
 
@@ -89,10 +96,32 @@ export async function logoutUser(req,res) {
         console.error(err)
         res.status(500).json("logout failed")
       }
+
+      res.clearCookie('connect.sid')
       res.status(200).json("logout success");
      })
    } catch (error) {
     console.error(error)
    }  
+  // req.session.destroy()
+  // console.log(
+  //   req.session
+
+  // );
+  
 }
 
+///////////////////////////////////////////// isLogin //////////////////////////////////////////////////////
+
+export async function isLogin(req,res){
+  try{
+    if(!req.session.user){
+      res.status(404).json({login:false})
+    }
+      res.status(200).json({login:true})
+
+  }catch(err){
+    console.log(err);
+    
+  }
+}

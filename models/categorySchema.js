@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 
+
 const categorySchema = mongoose.Schema({
     name:{
         type:String,
@@ -10,8 +11,12 @@ const categorySchema = mongoose.Schema({
     description:{
         type:String,
         require:true
+    },
+    image:{
+        type:String,
+        require:true
     }
 })
 
-const categories = mongoose.model("categories",categorySchema)
-export default categories
+const Categories = mongoose.model("Categories",categorySchema)
+export default Categories

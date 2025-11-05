@@ -22,6 +22,10 @@ const productSchema = new mongoose.Schema({
         ref :"categories",
         require:true
 
+    },
+     image:{
+        type:String,
+        require:true
     }
 },{timestamps:true})
    

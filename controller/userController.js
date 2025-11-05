@@ -1,7 +1,8 @@
-import categories from '../models/categorySchema.js';
+
 import products from '../models/productSchema.js'
 import cart from '../models/cartSchema.js';
 import orders from '../models/orderSchema.js';
+import Categories from '../models/categorySchema.js';
 
 
 //////////////////////////// user get product //////////////////////////////////////////////
@@ -46,15 +47,13 @@ export async function userGetProductDetail(req, res) {
 ////////////////////////////// User get category ///////////////////////////////////////////
 
 export async function userGetCategory(req, res) {
+
     try {
-
-        const showCategories = await categories.find({})
-
+        const showCategories = await Categories.find()
         if (!showCategories) {
             return res.status(404).json('something went wrong')
         }
         return res.status(200).json(showCategories)
-
 
     } catch (err) {
         console.log(err);
@@ -123,48 +122,48 @@ export async function postCart(req, res) {
 
 ///////////////////////////////// put(update)cart ////////////////////////////////////////////////
 
-export async function putCart(req, res) {
+    export async function putCart(req, res) {
 
-    try {
+        try {
 
-        const id = req.params.id
-        const { productId, action } = req.body
+            const id = req.params.id
+            const { productId, action } = req.body
 
-        const Cart = await cart.findOne({ _id: id }).populate("items.productId")
-        console.log(Cart);
+            const Cart = await cart.findOne({ _id: id }).populate("items.productId")
+            console.log(Cart);
 
-        if (!Cart) {
-            return res.status(404).json('cart not found')
+            if (!Cart) {
+                return res.status(404).json('cart not found')
+            }
+            const item =  Cart.items.find(i => i.productId._id.toString() === productId)
+            if (!item) {
+                return res.status(404).json('product not found');
+            }
+
+            if (action === "increase") {
+                item.quantity += 1
+            } else if (action === "decrease" && item.quantity > 1) {
+                item.quantity -= 1
+            } else if (action === "decrease" && item.quantity === 1) {
+                Cart.items = Cart.items.filter(i => i.productId._id.toString() !== productId)
+            } else {
+                res.json('not a specified action')
+            }
+
+            Cart.totalAmount = Cart.items.reduce((sum, i) => sum + i.quantity * i.price, 0)
+
+            await Cart.save()
+            await Cart.populate("items.productId")
+
+            res.status(200).json(Cart)
+
+
+        } catch (err) {
+            console.log(err);
+
         }
-        const item =  Cart.items.find(i => i.productId._id.toString() === productId)
-        if (!item) {
-            return res.status(404).json('product not found');
-        }
-
-        if (action === "increase") {
-            item.quantity += 1
-        } else if (action === "decrease" && item.quantity > 1) {
-            item.quantity -= 1
-        } else if (action === "decrease" && item.quantity === 1) {
-            Cart.items = Cart.items.filter(i => i.productId._id.toString() !== productId)
-        } else {
-            res.json('not a specified action')
-        }
-
-        Cart.totalAmount = Cart.items.reduce((sum, i) => sum + i.quantity * i.price, 0)
-
-        await Cart.save()
-        await Cart.populate("items.productId")
-
-        res.status(200).json(Cart)
-
-
-    } catch (err) {
-        console.log(err);
 
     }
-
-}
 
 /////////////////////////////////////// delete cart /////////////////////////////////////////////////////
 
@@ -187,20 +186,24 @@ export async function deleteCart(req, res) {
 ////////////////////////////////// get(view)cart ///////////////////////////////////////////////////////////
 
 export async function getCart(req, res) {
-    try {
+  try {
+    const userCart = await cart
+      .findOne({ user_id: req.session.user_id })
+      .populate("items.productId");
 
-        const found = await cart.find({})
-        console.log(found);
-
-        res.status(200).json(found)
-
-
-    } catch (err) {
-        console.log(err);
-        throw new Error("error found");
-
+    if (!userCart) {
+      return res.status(200).json({ items: [], totalAmount: 0 });
     }
+
+    console.log(userCart);
+    res.status(200).json(userCart);
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    res.status(500).json({ message: "Error fetching cart" });
+  }
 }
+
+
 
 ///////////////////////////////// post(add)orders //////////////////////////////////////////////////////
 
@@ -242,12 +245,21 @@ export async function getOrder(req, res) {
 
     try {
 
-        // const userId = req.session.user.id
-        const find = await orders.find({})
-        if (!find) {
-            return res.status(404).json("there is no order")
-        }
-        return res.status(200).json(find);
+        const userId = req.session.user.id
+        if(!userId){
+        return res.status(401).json("User not logged in");
+    }
+     const userOrders = await orders
+      .find({ userId })
+      .populate("items.productId") 
+      
+
+    if (!userOrders || userOrders.length === 0) {
+      return res.status(404).json("No orders found for this user");
+    }
+
+    res.status(200).json(userOrders);
+        
 
     } catch (err) {
         console.log(err);
