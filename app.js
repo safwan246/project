@@ -15,7 +15,6 @@ const __dirname = path.dirname(__filename);
 
 
 const app = express()
-const FRONTEND_ORIGIN =  'http://localhost:5173';
 const port =process.env.PORT || 3000
 
 
@@ -44,7 +43,7 @@ await connectDBS()
 
 // Enable CORS for frontend during development
 app.use(cors({
-  origin: FRONTEND_ORIGIN,
+  origin: true,
   credentials: true,
 }));
 
