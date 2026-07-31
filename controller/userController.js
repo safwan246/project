@@ -18,8 +18,8 @@ export async function userGetProduct(req, res) {
         }
         return res.status(200).json(showProducts)
     } catch (err) {
-        console.log(err);
-
+        console.error(err);
+        return res.status(500).json({ message: 'Could not load products' });
     }
 
 }
@@ -38,8 +38,8 @@ export async function userGetProductDetail(req, res) {
         }
         return res.status(200).json(productDetails)
     } catch (err) {
-        console.log(err);
-
+        console.error(err);
+        return res.status(500).json({ message: 'Could not load product details' });
     }
 }
 
@@ -56,8 +56,8 @@ export async function userGetCategory(req, res) {
         return res.status(200).json(showCategories)
 
     } catch (err) {
-        console.log(err);
-
+        console.error(err);
+        return res.status(500).json({ message: 'Could not load categories' });
     }
 }
 
@@ -188,7 +188,7 @@ export async function deleteCart(req, res) {
 export async function getCart(req, res) {
   try {
     const userCart = await cart
-      .findOne({ user_id: req.session.user_id })
+      .findOne({ userId: req.session.user.id })
       .populate("items.productId");
 
     if (!userCart) {

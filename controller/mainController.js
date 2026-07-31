@@ -5,26 +5,25 @@ import bcrypt from 'bcrypt'
 //////////////////// main register /////////////////////////////////////
 
 export async function postRegister(req,res){
-  console.log("req came in");
-  
     try{
         const {username,email,password,confirmPassword} =req.body;
-        // console.log(req.body)
+
+        if (!username || !email || !password || !confirmPassword) {
+          return res.status(400).json({ message: 'All fields are required' });
+        }
 
         const find = await User.findOne({email:email})
-        console.log(email);
-        
         if(find){
-          return res.json('user already existing')
+          return res.status(409).json({ message: 'User already exists' });
         }
 
         if(password !== confirmPassword){
-            return res.json('enter same password')
+            return res.status(400).json({ message: 'Passwords do not match' });
         }
 
       const hashPass = await bcrypt.hash(password,10)
 
-      const newUser = await User.create({
+      await User.create({
 
         username:username,
         email:email,
@@ -32,17 +31,14 @@ export async function postRegister(req,res){
 
       })
 
-      newUser.save()
-
-      console.log(newUser);
-      return res.json('successful')
+      return res.status(201).json({ message: 'Registration successful' });
       
         
 
 
     }catch(err){
         console.log(err);
-          res.status(500).json('Something went wrong');
+          return res.status(500).json({ message: 'Something went wrong' });
         
     }
 }
@@ -54,34 +50,40 @@ export async function postRegister(req,res){
 export async function postLogin(req,res){
   try{
     const {email,password} = req.body
-    // console.log(req.body);
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
     const store = await User.findOne({email:email})
 
     if(!store){
-      return res.status(404).json('user not found')
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
     
     const isCorrect = await bcrypt.compare(password,store.password)
 
 
+    if (!isCorrect) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
     req.session.user = {
-    
-      username:store.username,
-      email:store.email,
-      role:store.role,
-      id:store._id
+      username: store.username,
+      email: store.email,
+      role: store.role,
+      id: store._id.toString()
+    };
 
-
-    }
-    if(isCorrect){
-      return res.json( { message: ' login successful' })
-    }
-
+    return req.session.save((error) => {
+      if (error) {
+        return res.status(500).json({ message: 'Could not create login session' });
+      }
+      return res.status(200).json({ message: 'Login successful' });
+    });
 
   }catch(err){
     console.log(err)
-    res.status(500).json("something went wrong")
+    return res.status(500).json({ message: "Something went wrong" });
     
   }
 
@@ -94,7 +96,7 @@ export async function logoutUser(req,res) {
      req.session.destroy((err) => {
       if(err){
         console.error(err)
-        res.status(500).json("logout failed")
+        return res.status(500).json("logout failed")
       }
 
       res.clearCookie('connect.sid')
@@ -116,12 +118,12 @@ export async function logoutUser(req,res) {
 export async function isLogin(req,res){
   try{
     if(!req.session.user){
-      res.status(404).json({login:false})
+      return res.status(200).json({login:false})
     }
-      res.status(200).json({login:true})
+    return res.status(200).json({login:true})
 
   }catch(err){
-    console.log(err);
-    
+    console.error(err);
+    return res.status(500).json({ login: false });
   }
 }

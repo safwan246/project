@@ -1,24 +1,8 @@
 import express from 'express'
 import {postAdminlog,getUsers,getProduct,postProduct,getCategory,postCategory,putCategory,deleteCategory,putProduct,deleteProduct,getAdminOrders,putOrders,deleteOrder, adminUpdateUser, adminLogin} from '../controller/adminController.js'
 import { isAdmin } from '../middleware/auth.js'
-import session from 'express-session'
-import MongoStore from 'connect-mongo'
-import dotenv from 'dotenv'
 import upload from "../middleware/multer.js";
 const adminrouter = express.Router()
-
-dotenv.config()
-
-adminrouter.use(session({
-    secret : process.env.SECRET_KEY,
-    resave : false ,
-    saveUninitialized : false ,
-    store : MongoStore.create({
-        mongoUrl : process.env.MONGO_URI,
-        collectionName : "sessions",
-    })
-  }))
-
 
 adminrouter.post('/login',postAdminlog)
 

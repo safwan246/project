@@ -1,28 +1,10 @@
 import express from 'express'
 import {postRegister,postLogin,logoutUser, isLogin} from '../controller/mainController.js'
 
-import session from 'express-session'
-import MongoStore from 'connect-mongo'
-import dotenv from 'dotenv'
 import { userGetCategory, userGetProduct, userGetProductDetail } from '../controller/userController.js'
 import { getProductsByCategory } from '../controller/adminController.js'
 
 const router = express.Router()
-
-dotenv.config()
-
-
-
-router.use(session({
-    secret : process.env.SECRET_KEY,
-    resave : false ,
-    saveUninitialized : false ,
-    store : MongoStore.create({
-        mongoUrl : process.env.MONGO_URI,
-        collectionName : "sessions",
-    })
-  }))
-
 
 ////////////// main register & login //////////////
 router.delete('/logout',logoutUser)

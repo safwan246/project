@@ -1,24 +1,8 @@
 import express from 'express'
-import {userGetProduct,userGetProductDetail,userGetCategory,postCart, putCart,deleteCart,getCart,postOrders,getOrder,specificOrder} from '../controller/userController.js'
+import {postCart, putCart,deleteCart,getCart,postOrders,getOrder,specificOrder} from '../controller/userController.js'
 import { isUser } from '../middleware/auth.js'
-import session from 'express-session'
-import MongoStore from 'connect-mongo'
-import dotenv from 'dotenv'
-import { logoutUser } from '../controller/mainController.js'
-dotenv.config()
 
 const userRouter = express.Router()
-
-
-userRouter.use(session({
-    secret : process.env.SECRET_KEY,
-    resave : false ,
-    saveUninitialized : false ,
-    store : MongoStore.create({
-        mongoUrl : process.env.MONGO_URI,
-        collectionName : "sessions",
-    })
-  }))
 
 
 userRouter.use(isUser)

@@ -13,12 +13,11 @@ export async function connectDBS(){
         console.log("db connected");
 
     }catch(err){
-        console.log(err);
-        
+        console.error('Database connection failed:', err.message);
+        throw err;
     }
 }
     
-
 
 
 
